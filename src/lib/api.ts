@@ -107,14 +107,14 @@ class ApiClient {
 
   // Auth
   async register(username: string, password: string) {
-    return this.request("/auth/register-admin", {
+    return this.request("/api/auth/register-admin", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
   }
 
   async login(username: string, password: string) {
-    const data = await this.request("/auth/login", {
+    const data = await this.request("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
