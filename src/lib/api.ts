@@ -34,6 +34,8 @@ export interface Shelf {
 export interface Robot {
   id: string;
   name: string;
+  robot_id: string;
+  topic: string;
   available: boolean;
   status: string;
   current_shelf_id?: string;
@@ -80,6 +82,10 @@ class ApiClient {
   clearToken() {
     this.token = null;
     localStorage.removeItem("auth_token");
+  }
+
+  getToken() {
+    return this.token;
   }
 
   private async request(endpoint: string, options: RequestInit = {}) {
@@ -131,12 +137,51 @@ class ApiClient {
     return this.request(`/api/products/${id}`);
   }
 
+  async createProduct(data: Partial<Product>): Promise<Product> {
+    return this.request("/api/products", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateProduct(id: string, data: Partial<Product>): Promise<Product> {
+    return this.request(`/api/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteProduct(id: string) {
+    return this.request(`/api/products/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   async searchProducts(query: string): Promise<Product[]> {
     return this.request(`/api/products/search?q=${encodeURIComponent(query)}`);
   }
 
   async getProductLocation(id: string) {
     return this.request(`/api/products/${id}/location`);
+  }
+
+  async uploadProductImage(productId: string, file: File) {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/products/${productId}/images`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    return response.json();
   }
 
   // Shelves
@@ -146,6 +191,26 @@ class ApiClient {
 
   async getShelf(id: string): Promise<Shelf> {
     return this.request(`/api/shelves/${id}`);
+  }
+
+  async createShelf(data: Partial<Shelf>): Promise<Shelf> {
+    return this.request("/api/shelves", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateShelf(id: string, data: Partial<Shelf>): Promise<Shelf> {
+    return this.request(`/api/shelves/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteShelf(id: string) {
+    return this.request(`/api/shelves/${id}`, {
+      method: "DELETE",
+    });
   }
 
   async getShelfContents(id: string) {
@@ -161,14 +226,54 @@ class ApiClient {
     return this.request(`/api/robots/${id}`);
   }
 
+  async createRobot(data: Partial<Robot>): Promise<Robot> {
+    return this.request("/api/robots", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateRobot(id: string, data: Partial<Robot>): Promise<Robot> {
+    return this.request(`/api/robots/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteRobot(id: string) {
+    return this.request(`/api/robots/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Tasks
   async getTasks(): Promise<Task[]> {
     return this.request("/api/tasks");
   }
 
+  async createTask(data: { shelf_id: string; priority: number; description?: string }): Promise<Task> {
+    return this.request("/api/tasks/assign", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   // Map
   async getWarehouseMap(): Promise<WarehouseMap> {
     return this.request("/api/maps/merged");
+  }
+
+  // Dashboard
+  async getDashboardTopMoving() {
+    return this.request("/api/dashboard/top-moving");
+  }
+
+  async getDashboardShelves() {
+    return this.request("/api/dashboard/shelves");
+  }
+
+  async getDashboardDaily() {
+    return this.request("/api/dashboard/daily");
   }
 }
 
